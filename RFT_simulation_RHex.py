@@ -1,19 +1,11 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
+# --- IMPORT REQUIRED LIBRARIES ---
 from sim_fxn_lib import *
 import csv
 from matplotlib import cm
 import cv2
 import shutil
 
-
-# In[82]:
-
-
+# --- DEFINE SIMULATION SETTINGS + INITIALIZE MUJOCO MODEL ---
 xml_path = 'RHex1.xml'
 typ = "example"
 RFTCOEFF = 3.75
@@ -28,13 +20,12 @@ model, data, renderer, t, dt, frames, framerate, sand_h_id, stl_path = initializ
     'sandflipper.stl', 
     camera_name="plate_camera"
 )
-
-
-# In[83]:
-
+#------------------------------
 
 numSteps = len(t)
 tMax = t[-1]
+
+# --- MAPPING NAMES TO ID'S ---
 pos_actuator_ids = {}
 actuator_names = [
     "front right_p", "front left_p",
@@ -46,6 +37,7 @@ for name in actuator_names:
     pos_actuator_ids[name] = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, name)
 
 
+# --- POTENTIAL WAY TO CONTROL LEGS ---
 # control_pos = load_control_data_yaml('Example_Gait - RHex.yaml')
 new_len = int(numSteps)
 
@@ -56,8 +48,10 @@ new_len = int(numSteps)
 # control_pos_ml = interpolate_array(control_pos['theta1_L2'], new_len, repeats)
 # control_pos_bl = interpolate_array(control_pos['theta1_L3'], new_len, repeats)
 
+#-----------------------------
 sand_h_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, "sand_height")
 
+# --- TRACKING "FOOT" SINKAGE ---
 # dactyl_sinkage = {name: [] for name in [
 #     "prox_fr_dactyl_tip",
 #     "prox_mr_dactyl_tip",
@@ -69,6 +63,8 @@ sand_h_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, "sand_height")
 # dactyl_site_ids = {name: mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, name)
 #                    for name in dactyl_sinkage.keys()}
 
+
+# --- IMPORTING + USING STL MESH GEOMETRIES ---
 entities = get_named_bodies_from_xml(xml_path)
 
 body, vertices, faces, mesh = load_and_process_mesh(stl_path, scale_factor=1000)
@@ -91,6 +87,7 @@ for body_name in entities:
     
     body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, body_name)
 
+# --- APPLYING FORCE SITES ON MESH ---   
 def initialize_sites_for_all_bodies(model, data, body_dict, sitename="force"):
     for body_name, mesh in mesh_dict.items():
         initialize_sites_on_mesh(
@@ -103,6 +100,7 @@ def initialize_sites_for_all_bodies(model, data, body_dict, sitename="force"):
 
 initialize_sites_for_all_bodies(model, data, body_dict, sitename="force")
 
+# --- ??? ---
 # def generate_site_lines(body_names, sites_per_body=500, output_path="sites.txt"):
 #     with open(output_path, "w") as f:
 #         for body_name in body_names:
@@ -111,6 +109,7 @@ initialize_sites_for_all_bodies(model, data, body_dict, sitename="force")
 #                 f.write(line)
     # print(f"Site definitions written to {output_path}")
 
+# --- DATA --- 
 body_list = entities
 # print(body_list)
 # generate_site_lines(body_list, sites_per_body=500, output_path="sites.txt")
@@ -134,10 +133,12 @@ camera_list = ["diag"]
 frames = {cam: [] for cam in camera_list}
 plate_pos = []
 
+# --- STORING PREVIOUS POSITION + ORIENTATION TO ESTIMATE VELOCITY ---
 F_full_sorted_prev = np.zeros_like(faces)
 prev_body_pos_dict = {name: None for name in entities}
 prev_body_quat_dict = {name: None for name in entities}
 
+# --- SET UP STUFF ---
 applied_force = True
 once_submerged = False
 frame_dir = "frames"
@@ -153,7 +154,7 @@ for filename in os.listdir(frame_dir):
         print('Failed to delete %s. Reason: %s' % (file_path, e))
 
 
-# MAIN SIM
+# --- MAIN SIM ---
 body_velocities = {body_name: [] for body_name in entities}
 body_angular_velocities = {body_name: [] for body_name in entities}
 site_ids = {}
@@ -170,6 +171,7 @@ face_sort_order = {}
 sorted_faces_cache = {}
 sorted_site_ids_cache = {}
 
+# - SORTING MESH X-COORDINATE AND FORCE - 
 for body_name in body_list:
     faces, verts = faces_dict[body_name], vertices_dict[body_name]
     centroids_x = np.mean(verts[faces], axis=1)[:, 0]
@@ -178,17 +180,14 @@ for body_name in body_list:
     sorted_faces_cache[body_name]    = faces[order]
     sorted_site_ids_cache[body_name] = np.array(site_ids[body_name])[order]
 
+# - AREA OF MESH TRIANGLES - 
 face_areas_cache = {
     body_name: calculate_face_areas(vertices, sorted_faces_cache[body_name])
     for body_name in body_list
 }
 
-
-# In[84]:
-
-
+# - TELLING LEGS TO MOVE (SINUSOIDAL)-
 for i in range(len(t)):
-   
     data.ctrl[pos_actuator_ids["front right_p"]] = -2*np.pi*t[i] + 0.75*np.sin(2*np.pi*t[i]) + np.pi
     data.ctrl[pos_actuator_ids["middle right_p"]] = -2*np.pi*t[i] + 0.75*np.sin(2*np.pi*t[i] + np.pi)
     data.ctrl[pos_actuator_ids["back right_p"]] = -2*np.pi*t[i] + 0.75*np.sin(2*np.pi*t[i]) + np.pi
@@ -201,6 +200,7 @@ for i in range(len(t)):
 
     global_pos_sand = data.site_xpos[sand_h_id]
 
+# - CHECKING IF THERE ARE SUBMERGED BODIES -
     for body_name in body_list:
 
     
@@ -213,7 +213,7 @@ for i in range(len(t)):
         site_z = data.site_xpos[ids_arr, 2]  
         SUB = bool(np.any(site_z < global_pos_sand[2]))
 
-       
+       # - CALCULATE VELOCITY -
         body_pos = np.array(data.xpos[body_id])
         quat_now = np.array(data.xquat[body_id])
         if i > 0 and prev_body_pos_dict[body_name] is not None:
@@ -228,6 +228,8 @@ for i in range(len(t)):
         else:
             body_linear_velocity = np.zeros(3)
             body_angular_velocity = np.zeros(3)
+
+        # - SAVING VALUES - 
         body_velocities[body_name].append(body_linear_velocity.copy())
         body_angular_velocities[body_name].append(body_angular_velocity.copy())
         prev_body_pos_dict[body_name]  = body_pos.copy()
@@ -239,6 +241,7 @@ for i in range(len(t)):
 
         F_muj, M_muj = np.array([0, 0, 0]), np.array([0, 0, 0])
 
+        # - CALCULATE FORCES ON SUBMERGED BODIES + SAND INTERACTION - 
         if SUB:
             if once_submerged is False:
                 print(f"Body {body_name} submerged at time {t[i]:.3f}s with position {body_pos} and orientation {euler_angles}")
@@ -254,6 +257,7 @@ for i in range(len(t)):
                 sand_height_m=global_pos_sand[2]
             )
 
+            # - ORGANIZING DATA -
             order            = face_sort_order[body_name]
             faces_sorted     = sorted_faces_cache[body_name]
             site_ids_sorted  = sorted_site_ids_cache[body_name]
@@ -277,6 +281,7 @@ for i in range(len(t)):
             }
 
             for face_idx, site_id in enumerate(site_ids_sorted):
+            # - CAN UNCOMMENT IF WANT COLOR MAPPING STRESS VALUES -   
                 # if face_idx < len(face_colors):
                 #     if body_name in distal_bodies:
                 #         color = np.concatenate([face_colors[face_idx], [.8]], dtype=np.float32)
@@ -315,6 +320,7 @@ for i in range(len(t)):
         #     sinkage = global_pos_sand[2] - tip_pos[2]
         #     dactyl_sinkage[dactyl_name].append(sinkage)
 
+# --- SAVING STUFF + VIDEO ---
     if i % save_every == 0:
        
         renderer.update_scene(data, camera="diag")
@@ -322,10 +328,6 @@ for i in range(len(t)):
         cv2.imwrite(f"frames/{typ}_RFT_{RFTCOEFF:.2f}_frame_{i:04d}.png", frame)
         cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         # print(f"wrote frame {typ}_RFT_{RFTCOEFF:.2f}_frame_{i:04d}.png, RFT coeff={RFTCOEFF:.2f}")
-
-
-# In[85]:
-
 
 with open(f"W{typ}_plate_position{RFTCOEFF}.csv", "w", newline="") as f:
 
@@ -335,10 +337,6 @@ with open(f"W{typ}_plate_position{RFTCOEFF}.csv", "w", newline="") as f:
         row = [f"{coord:.4f}" for coord in plate_pos[i]]
         # print(row)
         writer.writerow(row)
-
-
-# In[86]:
-
 
 def create_video_from_frames(typ, frame_folder, frame_prefix, save_every, rft_coeff, output_name=None):
     fps = 1000 / save_every  # Match the simulation timestep
@@ -361,10 +359,6 @@ def create_video_from_frames(typ, frame_folder, frame_prefix, save_every, rft_co
     out.release()
     print(f"Video saved to {output_video}")
     return output_video
-
-
-# In[87]:
-
 
 create_video_from_frames(
     typ=typ,
