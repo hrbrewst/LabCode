@@ -45,7 +45,7 @@
         <camera pos="-.879 0.100 0.00" euler = "0 -90 0" name="plate_camera" mode="track"/>
         <geom type='mesh' mesh='plate' euler='-90 00 0'/>
         <freejoint/>
-        <inertial pos='0 0 0' mass='1' diaginertia=' .00614 .00759  .00146  '/>
+        <inertial pos='0 0 0' mass='2.26796' diaginertia='0.0121708832 0.0360122358 0.0238559845'/>
         <body name= 'box' pos='0 0.06 0'>
           <geom type='box' size='.1 .005 .1'/>
           <inertial pos="0 0 0" mass="1" diaginertia="0.00001 0.00001 0.00001"/>
@@ -53,37 +53,37 @@
 
           <body name='mid right' pos="-0.00 0.001 0.15" euler="90 0 0">
             <geom type='mesh' mesh='mid right' />
-            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+            <inertial pos="0 0 0" mass="0.02721554" diaginertia="0.0000263376 0.0000117056 0.0000321904"/>
             <joint name='mid right' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>
 
           <body name='mid left' pos="-0.00 0.001 -0.15" euler="90 0 0">
             <geom type='mesh' mesh='mid left' />
-            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+            <inertial pos="0 0 0" mass="0.02721554" diaginertia="0.0000263376 0.0000117056 0.0000321904"/>
             <joint name='mid left' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>
 
           <body name='front right' pos="0.1421 0.001 0.14" euler="90 0 0">
             <geom type='mesh' mesh='front right' />
-            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+            <inertial pos="0 0 0" mass=".0227" diaginertia="0.0000204848 0.0000058528 0.0000263376"/>
             <joint name='front right' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>
 
           <body name='front left' pos="0.1421 0.001 -0.14" euler="90 0 0">
             <geom type='mesh' mesh='front left' />
-            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+            <inertial pos="0 0 0" mass=".0227" diaginertia="0.0000204848 0.0000058528 0.0000263376"/>
             <joint name='front left' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>          
 
           <body name='back right' pos="-0.1421 0.001 0.14" euler="90 0 0">
             <geom type='mesh' mesh='back right' />
-            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+            <inertial pos="0 0 0" mass=".0227" diaginertia="0.0000204848 0.0000058528 0.0000263376"/>
             <joint name='back right' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>
 
           <body name='back left' pos="-0.1421 0.001 -0.14" euler="90 0 0">
             <geom type='mesh' mesh='back left' />
-            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+            <inertial pos="0 0 0" mass=".0227" diaginertia="0.0000204848 0.0000058528 0.0000263376"/>
             <joint name='back left' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>              
 
