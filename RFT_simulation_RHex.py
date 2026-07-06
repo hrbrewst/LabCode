@@ -4,11 +4,12 @@ import csv
 from matplotlib import cm
 import cv2
 import shutil
+import numpy as np
 
 # --- DEFINE SIMULATION SETTINGS + INITIALIZE MUJOCO MODEL ---
 xml_path = 'RHex1.xml'
 typ = "example"
-RFTCOEFF = 3.75
+RFTCOEFF = 0.4
 save_every = 8   
 repeats = 3
 tMax = 3
@@ -37,31 +38,8 @@ for name in actuator_names:
     pos_actuator_ids[name] = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, name)
 
 
-# --- POTENTIAL WAY TO CONTROL LEGS ---
-# control_pos = load_control_data_yaml('Example_Gait - RHex.yaml')
-new_len = int(numSteps)
-
-# control_pos_fr = interpolate_array(control_pos['theta1_R1'], new_len, repeats)
-# control_pos_mr = interpolate_array(control_pos['theta1_R2'], new_len, repeats)
-# control_pos_br = interpolate_array(control_pos['theta1_R3'], new_len, repeats)
-# control_pos_fl = interpolate_array(control_pos['theta1_L1'], new_len, repeats)
-# control_pos_ml = interpolate_array(control_pos['theta1_L2'], new_len, repeats)
-# control_pos_bl = interpolate_array(control_pos['theta1_L3'], new_len, repeats)
-
 #-----------------------------
 sand_h_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, "sand_height")
-
-# --- TRACKING "FOOT" SINKAGE ---
-# dactyl_sinkage = {name: [] for name in [
-#     "prox_fr_dactyl_tip",
-#     "prox_mr_dactyl_tip",
-#     "prox_br_dactyl_tip",
-#     "prox_fl_dactyl_tip",
-#     "prox_ml_dactyl_tip",
-#     "prox_bl_dactyl_tip"
-# ]}
-# dactyl_site_ids = {name: mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, name)
-#                    for name in dactyl_sinkage.keys()}
 
 
 # --- IMPORTING + USING STL MESH GEOMETRIES ---
@@ -100,14 +78,6 @@ def initialize_sites_for_all_bodies(model, data, body_dict, sitename="force"):
 
 initialize_sites_for_all_bodies(model, data, body_dict, sitename="force")
 
-# --- ??? ---
-# def generate_site_lines(body_names, sites_per_body=500, output_path="sites.txt"):
-#     with open(output_path, "w") as f:
-#         for body_name in body_names:
-#             for i in range(sites_per_body):
-#                 line = f'<site name="force_{body_name}_site_{i}" pos="0 0 0.000001" size="0.0009" type="sphere" rgba="1 1 1 1"/>\n'
-#                 f.write(line)
-    # print(f"Site definitions written to {output_path}")
 
 # --- DATA --- 
 body_list = entities
@@ -165,7 +135,7 @@ for body_name in body_list:
         for s in range(num_sites)
     ]
 site_id_arrays = {body_name: np.array(ids) for body_name, ids in site_ids.items()}
-print(site_id_arrays.keys())
+#print(site_id_arrays.keys())
 
 face_sort_order = {}
 sorted_faces_cache = {}
@@ -186,32 +156,136 @@ face_areas_cache = {
     for body_name in body_list
 }
 
-# - TELLING LEGS TO MOVE (SINUSOIDAL)-
+
+# --------ACTUAL CODE -------------
+# to measure displacement
+plate_id = mujoco.mj_name2id(model,mujoco.mjtObj.mjOBJ_BODY,"plate")
+start_pos = data.xpos[plate_id].copy()
+
+tripod_left = ["mid right" , "front left" , "back left"]
+
+joint_id_mr = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_left[0])
+#qpos_index_mr = model.jnt_qposadr[joint_id_mr]
+    
+joint_id_fl = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_left[1])
+#qpos_index_fl = model.jnt_qposadr[joint_id_fl]
+
+joint_id_bl = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_left[2])
+#qpos_index_bl = model.jnt_qposadr[joint_id_bl]
+
+commanded_left_angle = 0.0 
+
+# -------- RIGHT TRIPOD GAIT ---------
+tripod_right = ["mid left" , "front right" , "back right"]
+
+joint_id_ml = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_right[0])
+#qpos_index_ml = model.jnt_qposadr[joint_id_ml]
+    
+joint_id_fr = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_right[1])
+#qpos_index_fr = model.jnt_qposadr[joint_id_fr]  
+
+joint_id_br = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_right[2])
+#qpos_index_br = model.jnt_qposadr[joint_id_br]
+
+commanded_right_angle = -160*(np.pi/180)
+    
+#MuJoCo time steps is every 0.01
+stance_step = 0.16*(np.pi/180)
+swing_step = 0.56*(np.pi/180)
+left_leg_state = "swing"
+mr_touching_sand = False
+
+start_stance_list = []
+end_stance_list = []
+
+stance_reps = 20
+for cycle in range(stance_reps):
+    start_stance = 160*(np.pi/180) - 2*np.pi*cycle
+    end_stance = 240*(np.pi/180) -2*np.pi*cycle
+
+    start_stance_list.append(start_stance)
+    end_stance_list.append(end_stance)
 for i in range(len(t)):
-    data.ctrl[pos_actuator_ids["front right_p"]] = -2*np.pi*t[i] + 0.75*np.sin(2*np.pi*t[i]) + np.pi
-    data.ctrl[pos_actuator_ids["middle right_p"]] = -2*np.pi*t[i] + 0.75*np.sin(2*np.pi*t[i] + np.pi)
-    data.ctrl[pos_actuator_ids["back right_p"]] = -2*np.pi*t[i] + 0.75*np.sin(2*np.pi*t[i]) + np.pi
-    data.ctrl[pos_actuator_ids["front left_p"]] = -2*np.pi*t[i] + 0.75*np.sin(2*np.pi*t[i] + np.pi)
-    data.ctrl[pos_actuator_ids["middle left_p"]] = -2*np.pi*t[i] + 0.75*np.sin(2*np.pi*t[i]) + np.pi
-    data.ctrl[pos_actuator_ids["back left_p"]] = -2*np.pi*t[i] + 0.75*np.sin(2*np.pi*t[i] + np.pi)
+
+    left_leg_state = "swing"
+    right_leg_state = "swing"
+
+    for j in range(len(start_stance_list)):
+        start_stance = start_stance_list[j]
+        end_stance = end_stance_list[j]
+
+        if commanded_left_angle >= start_stance and commanded_left_angle < end_stance:
+            left_leg_state = "stance"
+
+        if commanded_right_angle >= start_stance and commanded_right_angle < end_stance:
+            right_leg_state = "stance"
+
+    if left_leg_state == "stance":
+        commanded_left_angle -= stance_step
+    else:
+        commanded_left_angle -= swing_step
+
+    if right_leg_state == "stance":
+        commanded_right_angle -= stance_step
+    else:
+        commanded_right_angle -= swing_step
+
+    data.ctrl[pos_actuator_ids["front left_p"]] = commanded_left_angle
+    data.ctrl[pos_actuator_ids["middle right_p"]] = commanded_left_angle
+    data.ctrl[pos_actuator_ids["back left_p"]] = commanded_left_angle
+
+    data.ctrl[pos_actuator_ids["front right_p"]] = commanded_right_angle  
+    data.ctrl[pos_actuator_ids["middle left_p"]] = commanded_right_angle
+    data.ctrl[pos_actuator_ids["back right_p"]] = commanded_right_angle
 
     mujoco.mj_step(model, data)
+
     data.qfrc_applied[:] = 0
 
     global_pos_sand = data.site_xpos[sand_h_id]
+    
+    robot_pos = data.xpos[plate_id].copy()
+    dist_x = robot_pos[0] - start_pos[0]
 
+#---------------------------------------------------------
+ # Calculate whether MR is touching sand AFTER stepping
+    ids_arr = site_id_arrays["mid right"]
+    site_z = data.site_xpos[ids_arr, 2]
+    mr_touching_sand = bool(np.any(site_z < global_pos_sand[2]))
+
+    ids_arr_01 = site_id_arrays["mid left"]
+    site_z_01 = data.site_xpos[ids_arr_01, 2]
+    ml_touching_sand = bool(np.any(site_z_01 < global_pos_sand[2]))
+
+#    if i % 100 == 0:
+ #       print(
+  #          f"t={t[i]:.3f}, "
+   #         f"Left angle={commanded_left_angle:.3f}, "
+    #        f"left state={left_leg_state}, "
+     #       f"left touching sand={mr_touching_sand}, "
+      #      f"Right angle={commanded_right_angle:.3f}, "
+       #     f"right state={right_leg_state}, "
+        #    f"right touching sand={ml_touching_sand}, "
+         #   f"Distance traveled={dist_x}, "
+          # )
 # - CHECKING IF THERE ARE SUBMERGED BODIES -
-    for body_name in body_list:
 
+    mr_touching_sand = False
+    ml_touching_sand = False
+    for body_name in body_list:
     
         body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, body_name)
         if body_name == "plate":
             plate_pos.append(np.array(data.xpos[body_id]))
 
-       
         ids_arr = site_id_arrays[body_name]
         site_z = data.site_xpos[ids_arr, 2]  
         SUB = bool(np.any(site_z < global_pos_sand[2]))
+
+        if body_name == "middle right":
+            mr_touching_sand = SUB
+        elif body_name == "middle left":
+            ml_tounching_sand = SUB
 
        # - CALCULATE VELOCITY -
         body_pos = np.array(data.xpos[body_id])
@@ -281,15 +355,6 @@ for i in range(len(t)):
             }
 
             for face_idx, site_id in enumerate(site_ids_sorted):
-            # - CAN UNCOMMENT IF WANT COLOR MAPPING STRESS VALUES -   
-                # if face_idx < len(face_colors):
-                #     if body_name in distal_bodies:
-                #         color = np.concatenate([face_colors[face_idx], [.8]], dtype=np.float32)
-                #     else:
-                #         color = np.array([0.5, 0.5, 0.5, 0], dtype=np.float32)
-                # else:
-                #     color = np.array([0.5, 0.5, 0.5, 0], dtype=np.float32)
-                # model.site_rgba[site_id, :] = color
 
                 if face_idx < len(F_full_sorted) and applied_force is True:
                     force_applied_at_site = np.array(-F_full_sorted[face_idx], dtype=np.float64)
@@ -315,10 +380,7 @@ for i in range(len(t)):
         else:
             v[f'fm_{body_name}'].append(np.array([0, 0, 0]))
             v[f'mm_{body_name}'].append(np.array([0, 0, 0]))
-        # for dactyl_name, site_id in dactyl_site_ids.items():
-        #     tip_pos = data.site_xpos[site_id]
-        #     sinkage = global_pos_sand[2] - tip_pos[2]
-        #     dactyl_sinkage[dactyl_name].append(sinkage)
+
 
 # --- SAVING STUFF + VIDEO ---
     if i % save_every == 0:
@@ -346,6 +408,7 @@ def create_video_from_frames(typ, frame_folder, frame_prefix, save_every, rft_co
         output_video = output_name
     frames = sorted([f for f in os.listdir(frame_folder) 
                      if f.startswith(frame_prefix) and f.endswith(".png")])
+
     first_frame = cv2.imread(os.path.join(frame_folder, frames[0]))
     height, width, _ = first_frame.shape
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -363,8 +426,9 @@ def create_video_from_frames(typ, frame_folder, frame_prefix, save_every, rft_co
 create_video_from_frames(
     typ=typ,
     frame_folder=r"frames",
-    frame_prefix=f"{typ}_RFT_3.75_frame_",
+    frame_prefix=f"{typ}_RFT_{RFTCOEFF:.2f}_frame_",
     save_every=save_every,
     rft_coeff=RFTCOEFF
 )
+
 

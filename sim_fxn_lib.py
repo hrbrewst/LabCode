@@ -321,3 +321,5 @@ def calculate_face_areas(vertices, faces):
         cr = np.cross(v0, v1)
         face_areas.append(np.linalg.norm(cr) / 2)
     return np.array(face_areas, dtype=np.float64)
+
+
