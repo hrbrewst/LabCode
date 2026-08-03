@@ -1,0 +1,119 @@
+<mujoco model="rhex">
+  <option timestep=".0001"/>
+  <option cone="elliptic" jacobian="sparse" gravity='0 0 -9.81' density = "1000" viscosity = "0.001" /> 
+  <size memory="4G"/>
+  <include file="noground.xml"/>
+  <visual>
+    <map stiffness="100"/>
+    <scale com=".005" framewidth=".005" jointwidth=".01"/>
+    <global offheight="2160" offwidth="1920"/>
+  </visual>
+  <default>
+    <geom rgba=".6 .5 .5 1"/>
+  </default>
+
+
+  <asset>
+    <!-- Body -->
+    <mesh name="plate" file="baseplate.STL" scale=".001 .001 .001"/>
+
+    <!-- Limbs -->
+    <mesh name="front left" file="front left.STL" scale=".001 .001 .001"/>
+    <mesh name="front right" file="front right.STL" scale=".001 .001 .001"/>
+    <mesh name="mid left" file="mid left.STL" scale=".001 .001 .001"/>
+    <mesh name="mid right" file="mid right.STL" scale=".001 .001 .001"/>
+    <mesh name="back left" file="back left.STL" scale=".001 .001 .001"/>
+    <mesh name="back right" file="back right.STL" scale=".001 .001 .001"/>
+
+  </asset>
+
+
+  <worldbody>
+    <camera pos="0.081 1.453 0.272" xyaxes="-0.998 -0.060 -0.000 0.001 0.016 1.000"  name="albert"/>
+    <camera pos="-0.148 3.790 1.822" xyaxes="-1.000 -0.003 -0.000 0.001 -0.469 0.883" name="timothy"/>
+    <camera pos="1.474 1.285 1.059" xyaxes="-0.562 0.827 -0.000 -0.452 -0.307 0.838" name="gerald"/>
+    <camera pos="0.092 -1.458 0.703" xyaxes="1.000 -0.001 -0.000 0.001 0.478 0.878" name="upclose"/>
+    <camera pos="-1.227 -0.855 0.789" xyaxes="0.565 -0.825 -0.000 0.343 0.235 0.909" name = "diag"/>
+    <camera pos="0.003 -0.720 0.017" xyaxes="1.000 0.005 -0.000 -0.000 0.024 1.000" name = "underview"/>
+    <camera pos="0.360 -0.432 0.200" xyaxes="0.794 0.608 -0.000 -0.153 0.200 0.968" name = "testview"/>
+    <camera pos="3.890 -4.099 -1.210" xyaxes="0.699 0.715 -0.000 0.071 -0.069 0.995" name="under"/>
+    <camera pos="1.023 0.787 0.001" xyaxes="-0.603 0.797 0.000 -0.033 -0.025 0.999" name="verif"/>
+    <camera pos="0.010 -0.018 1.093" xyaxes="1.000 -0.009 -0.000 0.009 1.000 0.017" name="from above"/>
+    <geom
+       name="floor"
+       type="plane"
+       pos="0 0 0"
+       size="2 2 .1"
+       friction="1.0 0.005 0.0001"
+       rgba="0.5 0.5 0.5 0.8"/>
+      <body name='plate' pos='0 00 0.14' euler='90 00 0' gravcomp = '0.9' >
+        <camera pos="-.879 0.100 0.00" euler = "0 -90 0" name="plate_camera" mode="track"/>
+        <geom fluidshape = "ellipsoid" type='mesh' mesh='plate' euler='-90 00 0'/>
+        <freejoint/>
+        <inertial pos='0 0 0' mass='2' diaginertia=' .00614 .00759  .00146  '/>
+
+          <body name='mid right' pos="-0.00 0.001 0.15" euler="90 0 0" gravcomp = '0.9' >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='mid right' mass = ".14"/>
+            <joint name='mid right' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
+          </body>
+
+          <body name='mid left' pos="-0.00 0.001 -0.15" euler="90 0 0" gravcomp = '0.9' >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='mid left' />
+            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+            <joint name='mid left' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
+          </body>
+
+          <body name='front right' pos="0.1421 0.001 0.14" euler="90 0 0" gravcomp = '0.9' >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='front right' />
+            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+            <joint name='front right' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
+          </body>
+
+          <body name='front left' pos="0.1421 0.001 -0.14" euler="90 0 0" gravcomp = '0.9' >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='front left' />
+            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+            <joint name='front left' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
+          </body>          
+
+          <body name='back right' pos="-0.1421 0.001 0.14" euler="90 0 0" gravcomp = '0.9' >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='back right' />
+            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+            <joint name='back right' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
+          </body>
+
+          <body name='back left' pos="-0.1421 0.001 -0.14" euler="90 0 0" gravcomp = '0.9' >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='back left' />
+            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+            <joint name='back left' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
+          </body>              
+        <!-- edit above to change body mass -->
+        </body>
+
+  </worldbody>
+
+  <actuator>
+    <!-- Front Right Leg -->
+    <position name="front right_p" joint="front right"     kp='200' ctrllimited='false' />
+
+    <!-- Middle Right Leg -->
+
+    <position name="middle right_p" joint="mid right"     kp='200' ctrllimited='false' />
+ 
+    <!-- Back Right Leg -->
+
+    <position name="back right_p" joint="back right"     kp='200' ctrllimited='false' />
+
+    <!-- Front Left Leg -->
+
+    <position name="front left_p" joint="front left"     kp='200' ctrllimited='false' />
+
+    <!-- Middle Left Leg -->
+
+    <position name="middle left_p" joint="mid left"     kp='200' ctrllimited='false'/>
+
+    <!-- Back Left Leg -->
+
+    <position name="back left_p" joint="back left"     kp='200' ctrllimited='false' />
+
+  </actuator>
+</mujoco>

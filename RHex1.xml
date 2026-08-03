@@ -47,7 +47,7 @@
         <freejoint/>
 
         <body name= 'box' pos='0 0.06 0'>
-          <geom type='box' size='.1 .005 .1' mass="1"/>
+          <geom type='box' size='.1 .005 .1' mass="13"/>
         </body>
 
           <body name='mid right' pos="-0.00 0.001 0.15" euler="90 0 0">

@@ -46,44 +46,42 @@
        size="2 2 .1"
        friction="1.0 0.005 0.0001"
        rgba="0.5 0.5 0.5 0.8"/>
-      <body name='plate' pos='0 00 0.14' euler='90 00 0' gravcomp = '0.9' >
+      <body name='plate' pos='0 00 0.14' euler='90 00 0' gravcomp = '0.642390959276' >
         <camera pos="-.879 0.100 0.00" euler = "0 -90 0" name="plate_camera" mode="track"/>
-        <geom fluidshape = "ellipsoid" type='mesh' mesh='plate' euler='-90 00 0'/>
+        <geom fluidshape = "ellipsoid" type='mesh' mesh='plate' euler='-90 00 0' mass = "11.3398"/>
         <freejoint/>
-        <inertial pos='0 0 0' mass='2' diaginertia=' .00614 .00759  .00146  '/>
 
-          <body name='mid right' pos="-0.00 0.001 0.15" euler="90 0 0" gravcomp = '0.9' >
-            <geom fluidshape = "ellipsoid" type='mesh' mesh='mid right' mass = ".14"/>
+          <body name= 'box' pos='0.05 0.05 0'>
+            <geom fluidshape="ellipsoid" type='box' size='.1 .005 .1' mass="1"/>
+          </body>
+
+          <body name='mid right' pos="-0.00 0.001 0.15" euler="90 0 0" >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='mid right' mass = "0.02721554"/>
             <joint name='mid right' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>
 
-          <body name='mid left' pos="-0.00 0.001 -0.15" euler="90 0 0" gravcomp = '0.9' >
-            <geom fluidshape = "ellipsoid" type='mesh' mesh='mid left' />
-            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+          <body name='mid left' pos="-0.00 0.001 -0.15" euler="90 0 0" >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='mid left' mass="0.02721554"/>
             <joint name='mid left' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>
 
-          <body name='front right' pos="0.1421 0.001 0.14" euler="90 0 0" gravcomp = '0.9' >
-            <geom fluidshape = "ellipsoid" type='mesh' mesh='front right' />
-            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+          <body name='front right' pos="0.1421 0.001 0.14" euler="90 0 0" >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='front right' mass=".0227"/>
             <joint name='front right' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>
 
-          <body name='front left' pos="0.1421 0.001 -0.14" euler="90 0 0" gravcomp = '0.9' >
-            <geom fluidshape = "ellipsoid" type='mesh' mesh='front left' />
-            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+          <body name='front left' pos="0.1421 0.001 -0.14" euler="90 0 0" >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='front left' mass=".0227"/>
             <joint name='front left' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>          
 
-          <body name='back right' pos="-0.1421 0.001 0.14" euler="90 0 0" gravcomp = '0.9' >
-            <geom fluidshape = "ellipsoid" type='mesh' mesh='back right' />
-            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+          <body name='back right' pos="-0.1421 0.001 0.14" euler="90 0 0" >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='back right' mass=".0227"/>
             <joint name='back right' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>
 
-          <body name='back left' pos="-0.1421 0.001 -0.14" euler="90 0 0" gravcomp = '0.9' >
-            <geom fluidshape = "ellipsoid" type='mesh' mesh='back left' />
-            <inertial pos="0 0 0" mass=".14" diaginertia="0.0000375 0.0000946 0.0000699"/>
+          <body name='back left' pos="-0.1421 0.001 -0.14" euler="90 0 0" >
+            <geom fluidshape = "ellipsoid" type='mesh' mesh='back left' mass=".0227"/>
             <joint name='back left' type='hinge' pos='-.0185 0 0.037' axis='-0 1 0' stiffness='1' damping='1'/>       
           </body>              
         <!-- edit above to change body mass -->

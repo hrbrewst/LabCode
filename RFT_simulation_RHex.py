@@ -165,13 +165,10 @@ start_pos = data.xpos[plate_id].copy()
 tripod_left = ["mid right" , "front left" , "back left"]
 
 joint_id_mr = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_left[0])
-#qpos_index_mr = model.jnt_qposadr[joint_id_mr]
     
 joint_id_fl = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_left[1])
-#qpos_index_fl = model.jnt_qposadr[joint_id_fl]
 
 joint_id_bl = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_left[2])
-#qpos_index_bl = model.jnt_qposadr[joint_id_bl]
 
 commanded_left_angle = 0.0 
 
@@ -179,13 +176,10 @@ commanded_left_angle = 0.0
 tripod_right = ["mid left" , "front right" , "back right"]
 
 joint_id_ml = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_right[0])
-#qpos_index_ml = model.jnt_qposadr[joint_id_ml]
     
 joint_id_fr = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_right[1])
-#qpos_index_fr = model.jnt_qposadr[joint_id_fr]  
 
 joint_id_br = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, tripod_right[2])
-#qpos_index_br = model.jnt_qposadr[joint_id_br]
 
 commanded_right_angle = -160*(np.pi/180)
     
